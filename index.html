@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AniManga | Tu Portal de Streaming</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #0b0e14; color: #e1e1e1; font-family: 'Inter', sans-serif; }
+        /* Efecto de brillo solo cuando pasas el mouse por las tarjetas */
+        .anime-card:hover { transform: translateY(-5px); transition: all 0.3s ease; box-shadow: 0 0 15px rgba(249, 115, 22, 0.2); }
+        .stats-box { background: #151921; border: 1px solid #1f242d; }
+
+        /* --- ARREGLO PARA QUE EL SPLASH NO TRABE LA PÁGINA --- */
+        #splash-screen { 
+            background-color: black; 
+            transition: opacity 1s ease-in-out;
+        }
+        #bg-splash {
+            animation: zoomMovimiento 10s infinite alternate ease-in-out;
+            filter: grayscale(100%) brightness(0.5);
+            object-fit: cover;
+        }
+        @keyframes zoomMovimiento {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+        .splash-oculto {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+    </style>
+</head>
+<body class="overflow-hidden"> <div id="splash-screen" class="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden">
+        <img src="IMG-20260420-WA0004.jpg" id="bg-splash" class="absolute inset-0 w-full h-full">
+        <div class="absolute inset-0 bg-black/40"></div>
+        <div class="relative z-10 text-center flex flex-col items-center">
+            <img src="IMG-20260420-WA0005.jpg" class="w-48 md:w-64 invert brightness-200 opacity-90 animate-pulse">
+            <div class="mt-6 h-[1px] w-32 bg-orange-500"></div>
+            <p class="text-white tracking-[0.8em] text-[10px] mt-4 font-light uppercase opacity-50 italic">Cargando Experiencia</p>
+        </div>
+    </div>
+
+    <nav class="bg-[#151921] border-b border-gray-800 sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+            <h1 onclick="window.location.reload()" class="text-3xl font-black text-orange-500 tracking-tighter cursor-pointer">
+                ANI<span class="text-white">MANGA</span>
+            </h1>
+
+            <div class="flex-1 max-w-md relative">
+                <input type="text" id="input-busqueda" placeholder="Buscar tu anime..." 
+                    class="w-full bg-[#0b0e14] border border-gray-800 py-2 pl-10 pr-4 rounded-xl text-sm focus:outline-none focus:border-orange-500 transition">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-600"></i>
+            </div>
+
+            <div class="flex gap-4 items-center">
+                <a href="login.html" class="text-gray-400 hover:text-white transition font-medium mr-2 text-xs">
+                    <i class="fas fa-user-circle mr-1"></i> LOGIN
+                </a>
+                <button onclick="abrirVIP()" class="bg-orange-500 text-white px-6 py-2 rounded-full font-bold hover:bg-orange-600 transition shadow-lg">
+                    VIP
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="container mx-auto px-4 mt-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="stats-box p-3 rounded-xl text-center border-l-2 border-green-500">
+                <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">En Vivo</span>
+                <h4 id="user-online" class="text-xl font-black text-white">1</h4>
+            </div>
+            <div class="stats-box p-3 rounded-xl text-center border-l-2 border-orange-500">
+                <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Usuarios</span>
+                <h4 id="total-registrados" class="text-xl font-black text-white">0</h4>
+            </div>
+            <div class="stats-box p-3 rounded-xl text-center border-l-2 border-blue-500">
+                <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Visitas</span>
+                <h4 id="total-visitas" class="text-xl font-black text-white">0</h4>
+            </div>
+            <div class="stats-box p-3 rounded-xl text-center border-l-2 border-yellow-500">
+                <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">VIP</span>
+                <h4 class="text-xl font-black text-white">0</h4>
+            </div>
+        </div>
+    </section>
+
+    <main class="container mx-auto px-4 py-10">
+        <h2 class="text-2xl font-bold mb-8 flex items-center gap-3">
+            <span class="w-2 h-8 bg-orange-500 rounded-full"></span>
+            Últimos Animes Agregados
+        </h2>
+        <div id="contenedor-animes" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+            </div>
+    </main>
+
+    <div id="modal-vip" class="fixed inset-0 z-[100] hidden flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="cerrarVIP()"></div>
+        <div class="relative bg-[#151921] border border-orange-500/30 w-full max-w-md rounded-3xl p-8 text-center shadow-2xl">
+            <h2 class="text-3xl font-black mb-2 italic text-white uppercase">Modo <span class="text-orange-500">Premium</span></h2>
+            <p class="text-gray-400 mb-6 text-sm italic">Sin anuncios y calidad 4K por solo $1.00 USD.</p>
+            <button class="w-full bg-orange-500 py-4 rounded-2xl font-bold hover:bg-orange-600 transition shadow-lg">PRUEBA 7 DÍAS GRATIS</button>
+            <button onclick="cerrarVIP()" class="mt-4 text-gray-600 text-xs hover:text-white transition underline">Cerrar</button>
+        </div>
+    </div>
+
+    <script src="js/datos.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+        setTimeout(() => {
+            const splash = document.getElementById('splash-screen');
+            if(splash) {
+                splash.classList.add('splash-oculto');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }, 4000); // 4 segundos y entra a la web
+    </script>
+</body>
+</html>

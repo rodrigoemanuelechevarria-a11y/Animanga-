@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | AniManga</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-[#0b0e14] flex items-center justify-center min-h-screen px-4">
+
+    <div class="bg-[#151921] p-8 rounded-3xl border border-gray-800 w-full max-w-md shadow-2xl">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-black text-orange-500 italic">ANI<span class="text-white">MANGA</span></h1>
+            <p class="text-gray-500 text-sm mt-2">Ingresa a tu cuenta en la nube</p>
+        </div>
+
+        <form id="form-login" class="space-y-6">
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Email</label>
+                <input type="email" id="email" required class="w-full bg-[#0b0e14] border border-gray-800 py-3 px-4 rounded-xl mt-1 focus:outline-none focus:border-orange-500 text-white transition">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Contraseña</label>
+                <input type="password" id="password" required class="w-full bg-[#0b0e14] border border-gray-800 py-3 px-4 rounded-xl mt-1 focus:outline-none focus:border-orange-500 text-white transition">
+            </div>
+            <button type="submit" class="w-full bg-orange-500 py-4 rounded-xl font-black text-white hover:bg-orange-600 transition shadow-lg shadow-orange-500/20 uppercase">
+                Entrar a la Nube
+            </button>
+        </form>
+        <p class="text-center mt-6 text-[10px] text-gray-600 uppercase font-bold tracking-widest">Conectado a Firebase Cloud</p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB4w8L0p7cuEyH7bnh8Pvpw4g2bNvZ8htk",
+            authDomain: "animanga-67a9c.firebaseapp.com",
+            projectId: "animanga-67a9c",
+            storageBucket: "animanga-67a9c.firebasestorage.app",
+            messagingSenderId: "564913121528",
+            appId: "1:564913121528:web:a3063817306df36687730d",
+            measurementId: "G-1NVSH1N9MD"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        document.getElementById('form-login').onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                localStorage.setItem('usuario_logueado', email);
+                window.location.href = 'index.html';
+            } catch (error) {
+                // Si la cuenta no existe, Firebase la crea
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                    try {
+                        await createUserWithEmailAndPassword(auth, email, password);
+                        localStorage.setItem('usuario_logueado', email);
+                        window.location.href = 'index.html';
+                    } catch (regError) {
+                        alert("Error: " + regError.message);
+                    }
+                } else {
+                    alert("Error: " + error.message);
+                }
+            }
+        };
+    </script>
+</body>
+</html>

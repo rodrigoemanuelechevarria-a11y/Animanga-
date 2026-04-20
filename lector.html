@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reproductor | AniManga</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #0b0e14; color: white; transition: 0.5s; }
+        .oculto-cine { display: none !important; }
+        #btn-skip { position: absolute; bottom: 60px; right: 20px; z-index: 50; }
+    </style>
+</head>
+<body>
+    <nav id="navbar" class="p-4 bg-[#151921] border-b border-gray-800 flex justify-between">
+        <a href="index.html" class="text-orange-500 font-bold"><i class="fas fa-arrow-left"></i> VOLVER</a>
+        <span id="user-tag" class="text-xs text-orange-500 font-black tracking-widest">INVITADO</span>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8 max-w-5xl">
+        <div id="header-video" class="mb-6">
+            <h1 id="titulo-anime" class="text-3xl font-black italic uppercase text-white"></h1>
+            <p id="num-episodio" class="text-orange-500 font-bold"></p>
+        </div>
+
+        <div class="relative bg-black rounded-3xl overflow-hidden shadow-2xl border border-gray-800 group">
+            <div id="contenedor-reproductor">
+                <video id="reproductor" controls class="w-full aspect-video">
+                    <source id="video-source" src="" type="video/mp4">
+                </video>
+            </div>
+            
+            <button id="btn-skip" class="hidden bg-white/10 backdrop-blur-md border border-white/20 text-white px-5 py-2 rounded-lg font-bold text-xs hover:bg-orange-500 transition-all uppercase">
+                Omitir Intro <i class="fas fa-forward ml-2"></i>
+            </button>
+        </div>
+
+        <div class="mt-8 flex flex-wrap justify-center gap-4">
+            <button onclick="cambiarEpisodio(-1)" class="bg-[#1f242d] px-6 py-3 rounded-xl font-bold">ANTERIOR</button>
+            <button id="btn-cine" class="bg-yellow-500 text-black px-6 py-3 rounded-xl font-bold hover:bg-yellow-400 transition">
+                <i class="fas fa-lightbulb"></i> MODO CINE
+            </button>
+            <button onclick="cambiarEpisodio(1)" class="bg-orange-500 px-6 py-3 rounded-xl font-bold shadow-lg">SIGUIENTE</button>
+        </div>
+
+        <div id="seccion-episodios" class="mt-10">
+            <h3 class="font-bold mb-4 uppercase text-xs text-gray-500 tracking-widest">Episodios disponibles</h3>
+            <div id="lista-botones" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div id="publicidad" class="mt-12 p-10 bg-[#151921] border-2 border-dashed border-gray-800 rounded-3xl text-center">
+            <i class="fas fa-ad text-gray-700 text-4xl mb-2"></i>
+            <p class="text-gray-600 font-bold uppercase tracking-widest text-sm text-white">Publicidad</p>
+        </div>
+    </main>
+
+    <script src="js/datos.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const animeId = parseInt(urlParams.get('id'));
+        const anime = ANIMES.find(a => a.id === animeId);
+        
+        let epActual = parseInt(localStorage.getItem(`last_ep_${animeId}`)) || 1;
+
+        function cargarVideo(num) {
+            const episodio = anime.episodios.find(e => e.numero === num);
+            if (episodio) {
+                epActual = num;
+                document.getElementById('titulo-anime').innerText = anime.titulo;
+                document.getElementById('num-episodio').innerText = "Episodio " + num;
+                
+                const contenedor = document.getElementById('contenedor-reproductor');
+
+                // ESTA ES LA ÚNICA PARTE QUE CAMBIA:
+                // Si el link es de Drive, usa iframe. Si no, usa el video normal.
+                if (episodio.url.includes('drive.google.com')) {
+                    contenedor.innerHTML = `<iframe id="reproductor" src="${episodio.url}" class="w-full aspect-video" allowfullscreen></iframe>`;
+                } else {
+                    contenedor.innerHTML = `<video id="reproductor" controls class="w-full aspect-video"><source src="${episodio.url}" type="video/mp4"></video>`;
+                }
+                
+                localStorage.setItem(`last_ep_${animeId}`, num);
+                actualizarLista();
+            }
+        }
+
+        function cambiarEpisodio(dir) { cargarVideo(epActual + dir); }
+
+        function actualizarLista() {
+            const lista = document.getElementById('lista-botones');
+            lista.innerHTML = "";
+            anime.episodios.forEach(e => {
+                const color = e.numero === epActual ? 'bg-orange-500' : 'bg-gray-800 hover:bg-gray-700';
+                lista.innerHTML += `<button onclick="cargarVideo(${e.numero})" class="${color} w-12 h-12 rounded-lg font-bold transition">${e.numero}</button>`;
+            });
+        }
+
+        const btnCine = document.getElementById('btn-cine');
+        btnCine.onclick = () => {
+            const isCine = document.body.style.backgroundColor === "black";
+            document.body.style.backgroundColor = isCine ? "#0b0e14" : "black";
+            document.getElementById('navbar').classList.toggle('oculto-cine');
+            document.getElementById('header-video').classList.toggle('opacity-5');
+            document.getElementById('publicidad').classList.toggle('oculto-cine');
+            document.getElementById('seccion-episodios').classList.toggle('oculto-cine');
+        };
+
+        const user = localStorage.getItem('usuario_logueado');
+        if(user) {
+            document.getElementById('user-tag').innerText = user.split('@')[0].toUpperCase();
+        }
+
+        if (anime) cargarVideo(epActual);
+    </script>
+</body>
+</html>
