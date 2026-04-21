@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reproductor | AniManga</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #0b0e14; color: white; transition: 0.5s; }
+        .oculto-cine { display: none !important; }
+        #btn-skip { position: absolute; bottom: 60px; right: 20px; z-index: 50; }
+    </style>
+</head>
+<body>
+    <nav id="navbar" class="p-4 bg-[#151921] border-b border-gray-800 flex justify-between">
+        <a href="index.html" class="text-orange-500 font-bold"><i class="fas fa-arrow-left"></i> VOLVER</a>
+        <span id="user-tag" class="text-xs text-orange-500 font-black tracking-widest">INVITADO</span>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8 max-w-5xl">
+        <div id="header-video" class="mb-6">
+            <h1 id="titulo-anime" class="text-3xl font-black italic uppercase text-white"></h1>
+            <p id="num-episodio" class="text-orange-500 font-bold"></p>
+        </div>
+
+        <div class="relative bg-black rounded-3xl overflow-hidden shadow-2xl border border-gray-800 group">
+            <div id="contenedor-reproductor">
+                <video id="reproductor" controls class="w-full aspect-video">
+                    <source id="video-source" src="" type="video/mp4">
+                </video>
+            </div>
+            
+            <button id="btn-skip" class="hidden bg-white/10 backdrop-blur-md border border-white/20 text-white px-5 py-2 rounded-lg font-bold text-xs hover:bg-orange-500 transition-all uppercase">
+                Omitir Intro <i class="fas fa-forward ml-2"></i>
+            </button>
+        </div>
+
+        <div class="mt-8 flex flex-wrap justify-center gap-4">
+            <button onclick="cambiarEpisodio(-1)" class="bg-[#1f242d] px-6 py-3 rounded-xl font-bold">ANTERIOR</button>
+            <button id="btn-cine" class="bg-yellow-500 text-black px-6 py-3 rounded-xl font-bold hover:bg-yellow-400 transition">
+                <i class="fas fa-lightbulb"></i> MODO CINE
+            </button>
+            <button onclick="cambiarEpisodio(1)" class="bg-orange-500 px-6 py-3 rounded-xl font-bold shadow-lg">SIGUIENTE</button>
+        </div>
+
+        <div id="seccion-episodios" class="mt-10">
+            <h3 class="font-bold mb-4 uppercase text-xs text-gray-500 tracking-widest">Episodios disponibles</h3>
+            <div id="lista-botones" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div class="mt-10 bg-[#151921] p-6 rounded-3xl border border-gray-800">
+            <h2 class="text-xl font-black uppercase mb-4 text-orange-500">Comentarios</h2>
+            
+            <div class="flex items-center mb-4 text-yellow-500">
+                <span class="text-gray-400 text-xs mr-3 uppercase font-bold">Valorar:</span>
+                <i class="fas fa-star cursor-pointer"></i>
+                <i class="fas fa-star cursor-pointer"></i>
+                <i class="fas fa-star cursor-pointer"></i>
+                <i class="fas fa-star cursor-pointer"></i>
+                <i class="far fa-star cursor-pointer"></i>
+            </div>
+
+            <textarea id="nuevo-comentario" class="w-full bg-black border border-gray-800 rounded-2xl p-4 text-white focus:border-orange-500 outline-none transition" rows="3" placeholder="¿Qué te pareció el capítulo?"></textarea>
+            
+            <button onclick="publicarComentario()" class="mt-3 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-xl transition uppercase text-xs tracking-widest">
+                Publicar
+            </button>
+
+            <div id="lista-comentarios" class="mt-8 space-y-4 text-sm">
+                </div>
+        </div>
+
+        <div class="mt-6 p-6 bg-gradient-to-r from-orange-500/10 to-transparent rounded-3xl border border-orange-500/20">
+            <h3 class="text-sm font-bold text-white mb-2 uppercase">🚀 Sugerencias para AniManga</h3>
+            <div class="flex gap-2">
+                <input id="input-consejo" type="text" class="flex-1 bg-black border border-gray-800 rounded-xl px-4 py-2 text-white text-sm" placeholder="¿Qué te gustaría agregar?">
+                <button onclick="enviarConsejo()" class="bg-white text-black font-bold px-4 py-2 rounded-xl hover:bg-orange-500 hover:text-white transition text-xs">ENVIAR</button>
+            </div>
+        </div>
+
+        <div id="publicidad" class="mt-12 p-10 bg-[#151921] border-2 border-dashed border-gray-800 rounded-3xl text-center">
+            <i class="fas fa-ad text-gray-700 text-4xl mb-2"></i>
+            <p class="text-gray-600 font-bold uppercase tracking-widest text-sm">Publicidad</p>
+        </div>
+    </main>
+
+    <script src="js/datos.js"></script>
+    <script src="js/main.js"></script> <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const animeId = parseInt(urlParams.get('id'));
+        const anime = ANIMES.find(a => a.id === animeId);
+        
+        let epActual = parseInt(localStorage.getItem(`last_ep_${animeId}`)) || 1;
+
+        function cargarVideo(num) {
+            const episodio = anime.episodios.find(e => e.numero === num);
+            if (episodio) {
+                epActual = num;
+                document.getElementById('titulo-anime').innerText = anime.titulo;
+                document.getElementById('num-episodio').innerText = "Episodio " + num;
+                
+                const contenedor = document.getElementById('contenedor-reproductor');
+
+                if (episodio.url.includes('drive.google.com')) {
+                    contenedor.innerHTML = `<iframe id="reproductor" src="${episodio.url}" class="w-full aspect-video" allowfullscreen></iframe>`;
+                } else {
+                    contenedor.innerHTML = `<video id="reproductor" controls class="w-full aspect-video"><source src="${episodio.url}" type="video/mp4"></video>`;
+                }
+                
+                localStorage.setItem(`last_ep_${animeId}`, num);
+                actualizarLista();
+            }
+        }
+
+        function cambiarEpisodio(dir) { cargarVideo(epActual + dir); }
+
+        function actualizarLista() {
+            const lista = document.getElementById('lista-botones');
+            lista.innerHTML = "";
+            anime.episodios.forEach(e => {
+                const color = e.numero === epActual ? 'bg-orange-500' : 'bg-gray-800 hover:bg-gray-700';
+                lista.innerHTML += `<button onclick="cargarVideo(${e.numero})" class="${color} w-12 h-12 rounded-lg font-bold transition">${e.numero}</button>`;
+            });
+        }
+
+        const btnCine = document.getElementById('btn-cine');
+        btnCine.onclick = () => {
+            const isCine = document.body.style.backgroundColor === "black";
+            document.body.style.backgroundColor = isCine ? "#0b0e14" : "black";
+            document.getElementById('navbar').classList.toggle('oculto-cine');
+            document.getElementById('header-video').classList.toggle('opacity-5');
+            document.getElementById('publicidad').classList.toggle('oculto-cine');
+            document.getElementById('seccion-episodios').classList.toggle('oculto-cine');
+        };
+
+        const user = localStorage.getItem('usuario_logueado');
+        if(user) {
+            document.getElementById('user-tag').innerText = user.split('@')[0].toUpperCase();
+        }
+
+        if (anime) cargarVideo(epActual);
+
+        // FUNCIONES NUEVAS DE COMENTARIOS
+        function publicarComentario() {
+            const texto = document.getElementById('nuevo-comentario').value;
+            if (texto.trim() === "") return;
+            const lista = document.getElementById('lista-comentarios');
+            const nick = user ? user.split('@')[0].toUpperCase() : "INVITADO";
+            const div = document.createElement('div');
+            div.className = "bg-black/50 p-4 rounded-2xl border-l-4 border-orange-500";
+            div.innerHTML = `<p class="text-orange-500 font-black text-[10px] mb-1">${nick}</p><p class="text-gray-300">${texto}</p>`;
+            lista.prepend(div);
+            document.getElementById('nuevo-comentario').value = "";
+        }
+
+        function enviarConsejo() {
+            const consejo = document.getElementById('input-consejo').value;
+            if (consejo.trim() === "") return;
+            alert("¡Gracias! Recibí tu consejo: " + consejo);
+            document.getElementById('input-consejo').value = "";
+        }
+    </script>
+</body>
+</html>
